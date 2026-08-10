@@ -13,11 +13,6 @@
 #'
 #' @examples
 #' # Example usage:
-#' meth_raw <- list(
-#'   sample1 = data.frame(chr = c("chr1", "chr2", "chr1")),
-#'   sample2 = data.frame(chr = c("chr1", "chr2", "chr3")),
-#'   sample3 = data.frame(chr = c("chr1", "chr2", "chr1"))
-#' )
 #' names(meth_raw) <- c("Sample1", "Sample2", "Sample3")
 #' unique_chr <- get_unique_chr_names(meth_raw, num_samples = 3)
 #'

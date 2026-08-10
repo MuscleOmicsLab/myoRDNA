@@ -44,11 +44,6 @@
 #'   diploid = TRUE
 #' )
 #'
-#' # Example usage with custom data frames:
-#' Meth_object <- list(
-#'   Sample1 = data.frame(chr = c("chr1", "chr2", "chrRDNAm"), coverage = c(30, 40, 600)),
-#'   Sample2 = data.frame(chr = c("chr1", "chr2", "chrRDNAm"), coverage = c(25, 35, 500))
-#' )
 #' names(Meth_object) <- c("Sample1", "Sample2")
 #' relative_rDNA_CN(
 #'   Meth_object = Meth_object,
