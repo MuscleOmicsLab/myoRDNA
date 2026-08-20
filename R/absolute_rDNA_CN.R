@@ -5,15 +5,15 @@
 #' to the coverage of either the autosomes (chromosomes 1-19) or the entire genome (excluding rDNA).
 #' The absolute copy number is adjusted for ploidy (diploid or haploid).
 #'
-#' @param Meth_object A named list of `methylRaw` objects (from `methylKit`) or data frames,
+#' @param Meth_object - A named list of `methylRaw` objects (from `methylKit`) or data frames,
 #'   where each element represents a sample and contains columns `chr` (chromosome name) and
 #'   `coverage` (coverage depth).
-#' @param num_samples An integer specifying the number of samples in `Meth_object` to process.
-#' @param autosomes A logical (`TRUE`/`FALSE`) indicating whether to use **autosomes (chromosomes 1-19)**
+#' @param num_samples - An integer specifying the number of samples in `Meth_object` to process.
+#' @param autosomes - A logical (`TRUE`/`FALSE`) indicating whether to use **autosomes (chromosomes 1-19)**
 #'   as the reference for genome coverage. If `FALSE`, the reference is the entire genome **excluding rDNA**.
 #'   Default: `TRUE`.
-#' @param rDNA_chr A character string specifying the name of the rDNA chromosome (e.g., `"chrRDNAm"`).
-#' @param diploid A logical (`TRUE`/`FALSE`) indicating whether the genome is **diploid** (2 copies of each chromosome).
+#' @param rDNA_chr - A character string specifying the name of the rDNA chromosome (e.g., `"chrRDNAm"`).
+#' @param diploid - A logical (`TRUE`/`FALSE`) indicating whether the genome is **diploid** (2 copies of each chromosome).
 #'   If `TRUE`, the absolute rDNA copy number is multiplied by 2. Default: `TRUE`.
 #'
 #' @return
@@ -58,7 +58,7 @@
 #' - If `autosomes = FALSE`, the reference coverage is calculated from **all chromosomes except `rDNA_chr`**.
 #' - The function assumes `Meth_object` is a **named list** and that each element has a `@sample.id` slot (if using `methylRaw` objects) or can be accessed via `names(Meth_object)[i]`.
 #' - If `cov_wgenome` is `0`, the function will produce `Inf` or `NA` for `abs_rDNA_CN`. Add a check for `cov_wgenome > 0` if this is a concern.
-#' - The function uses `cat` to print tab-separated output. To capture the output, redirect it to a file or use `capture.output()`.
+#' - The function uses `cat` to print tab-separated output. To capture the output, redirect it to a file or use `capture.output().
 #'
 #' @export
 absolute_rDNA_CN <- function(
