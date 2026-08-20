@@ -11,13 +11,6 @@
 #' @return A character vector of unique chromosome names from the first sample, if all samples are consistent.
 #'   If inconsistencies are found, the function stops execution and raises an error.
 #'
-#' @examples
-#' # Example usage:
-#' names(meth_raw) <- c("Sample1", "Sample2", "Sample3")
-#' unique_chr <- get_unique_chr_names(meth_raw, num_samples = 3)
-#'
-#' # This will raise an error if chromosomes are inconsistent:
-#' # Error: Not all samples have the same chromosomes. The following samples have mismatched chromosomes: Sample2
 #'
 #' @note
 #' - The function assumes `Meth_object` is a **named list** (so `names(Meth_object)[i]` returns the sample name).

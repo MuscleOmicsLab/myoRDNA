@@ -3,9 +3,10 @@ Title: Tools for Calculating for rDNA in Muscle Sequencing Data
 Version: 0.0.0.9000
 Authors@R:
     person(given = "Daniel", family = "Vaughan", role = c("aut", "cre"), email = "daniel.1.vaughan@kcl.ac.uk")
-Description: Functions to for working with rDNA data generated from sequencing experiments. The package includes functions to calculate the relative rDNA copy number from coverage data, as well as functions to calculate the absolute rDNA copy number using methylation data.
+Description: Functions for working with rDNA data generated from sequencing experiments. The package includes functions to calculate the relative rDNA copy number from coverage data, as well as functions to calculate the absolute rDNA copy number using methylation data.
 Depends: R (>= 4.0.0)
-Imports: methylKit
+Imports: 
+  methylKit
 License: MIT
 Encoding: UTF-8
 URL: https://github.com/MuscleOmicsLab/myoRDNA

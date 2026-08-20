@@ -13,19 +13,19 @@ absolute_rDNA_CN(
 )
 }
 \arguments{
-\item{Meth_object}{A named list of `methylRaw` objects (from `methylKit`) or data frames,
+\item{Meth_object}{- A named list of `methylRaw` objects (from `methylKit`) or data frames,
 where each element represents a sample and contains columns `chr` (chromosome name) and
 `coverage` (coverage depth).}
 
-\item{num_samples}{An integer specifying the number of samples in `Meth_object` to process.}
+\item{num_samples}{- An integer specifying the number of samples in `Meth_object` to process.}
 
-\item{autosomes}{A logical (`TRUE`/`FALSE`) indicating whether to use **autosomes (chromosomes 1-19)**
+\item{autosomes}{- A logical (`TRUE`/`FALSE`) indicating whether to use **autosomes (chromosomes 1-19)**
 as the reference for genome coverage. If `FALSE`, the reference is the entire genome **excluding rDNA**.
 Default: `TRUE`.}
 
-\item{rDNA_chr}{A character string specifying the name of the rDNA chromosome (e.g., `"chrRDNAm"`).}
+\item{rDNA_chr}{- A character string specifying the name of the rDNA chromosome (e.g., `"chrRDNAm"`).}
 
-\item{diploid}{A logical (`TRUE`/`FALSE`) indicating whether the genome is **diploid** (2 copies of each chromosome).
+\item{diploid}{- A logical (`TRUE`/`FALSE`) indicating whether the genome is **diploid** (2 copies of each chromosome).
 If `TRUE`, the absolute rDNA copy number is multiplied by 2. Default: `TRUE`.}
 }
 \value{
@@ -50,38 +50,5 @@ The absolute copy number is adjusted for ploidy (diploid or haploid).
 - If `autosomes = FALSE`, the reference coverage is calculated from **all chromosomes except `rDNA_chr`**.
 - The function assumes `Meth_object` is a **named list** and that each element has a `@sample.id` slot (if using `methylRaw` objects) or can be accessed via `names(Meth_object)[i]`.
 - If `cov_wgenome` is `0`, the function will produce `Inf` or `NA` for `abs_rDNA_CN`. Add a check for `cov_wgenome > 0` if this is a concern.
-- The function uses `cat` to print tab-separated output. To capture the output, redirect it to a file or use `capture.output()`.
-}
-\examples{
-# Example usage with methylKit objects:
-library(methylKit)
-meth_raw <- methRead(
-  location = "path/to/coverage_files",
-  sample.id = c("Sample1", "Sample2"),
-  assembly = "hg38",
-  context = "CpG",
-  pipeline = "bismarkCoverage"
-)
-absolute_rDNA_CN(
-  Meth_object = meth_raw,
-  num_samples = 2,
-  autosomes = TRUE,
-  rDNA_chr = "chrRDNAm",
-  diploid = TRUE
-)
-
-# Example usage with custom data frames:
-Meth_object <- list(
-  Sample1 = data.frame(chr = c("chr1", "chr2", "chrRDNAm"), coverage = c(30, 40, 600)),
-  Sample2 = data.frame(chr = c("chr1", "chr2", "chrRDNAm"), coverage = c(25, 35, 500))
-)
-names(Meth_object) <- c("Sample1", "Sample2")
-absolute_rDNA_CN(
-  Meth_object = Meth_object,
-  num_samples = 2,
-  autosomes = FALSE,
-  rDNA_chr = "chrRDNAm",
-  diploid = FALSE
-)
-
+- The function uses `cat` to print tab-separated output. To capture the output, redirect it to a file or use `capture.output().
 }

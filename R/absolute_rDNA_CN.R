@@ -26,31 +26,6 @@
 #' }
 #' The function does **not** return a value but prints results directly.
 #'
-#' @examples
-#' # Example usage with methylKit objects:
-#' library(methylKit)
-#' meth_raw <- methRead(
-#'   location = "path/to/coverage_files",
-#'   sample.id = c("Sample1", "Sample2"),
-#'   assembly = "hg38",
-#'   context = "CpG",
-#'   pipeline = "bismarkCoverage"
-#' )
-#' absolute_rDNA_CN(
-#'   Meth_object = meth_raw,
-#'   num_samples = 2,
-#'   autosomes = TRUE,
-#'   rDNA_chr = "chrRDNAm",
-#'   diploid = TRUE
-#' )
-#'
-#' absolute_rDNA_CN(
-#'   Meth_object = Meth_object,
-#'   num_samples = 2,
-#'   autosomes = FALSE,
-#'   rDNA_chr = "chrRDNAm",
-#'   diploid = FALSE
-#' )
 #'
 #' @note
 #' - If `autosomes = TRUE`, the reference coverage (`cov_wgenome`) is calculated from chromosomes 1-19.

@@ -26,17 +26,3 @@ If inconsistencies are found, it raises an error and lists the problematic sampl
 - If `Meth_object` is unnamed, replace `names(meth_raw)[i]` with a custom identifier (e.g., `paste("Sample", i)`).
 - The function uses `setequal()` to ensure exact matching of chromosome sets.
 }
-\examples{
-# Example usage:
-meth_raw <- list(
-  sample1 = data.frame(chr = c("chr1", "chr2", "chr1")),
-  sample2 = data.frame(chr = c("chr1", "chr2", "chr3")),
-  sample3 = data.frame(chr = c("chr1", "chr2", "chr1"))
-)
-names(meth_raw) <- c("Sample1", "Sample2", "Sample3")
-unique_chr <- get_unique_chr_names(meth_raw, num_samples = 3)
-
-# This will raise an error if chromosomes are inconsistent:
-# Error: Not all samples have the same chromosomes. The following samples have mismatched chromosomes: Sample2
-
-}

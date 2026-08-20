@@ -56,3 +56,8 @@ rsconnect/
 *.key
 *.log
 *.yml
+/testing
+/testing/*
+testing.R
+/test
+/test/*
