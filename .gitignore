@@ -61,3 +61,9 @@ rsconnect/
 testing.R
 /test
 /test/*
+*.bam
+*.fastq
+*.fq
+*.fastq.gz
+*.bed
+*.vcf
