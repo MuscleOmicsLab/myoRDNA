@@ -8,12 +8,12 @@
 #'
 #' @return A subset of `meth_object` containing only the rDNA chromosome data.
 #' @examples
-#' get_rDNA_data(meth_object, num_samples = 10, rDNA_chr_name = "rDNAm")
+#' get_rDNA_data(meth_object, num_samples = 10, rDNA_chr_name)
 library("GenomicRanges")
 get_rDNA_data <- function(
     meth_object,
     num_samples,
-    rDNA_chr_name = "rDNAm"
+    rDNA_chr_name
 ) {
     rdna_gr <- GRanges(
         seqnames = rDNA_chr_name,
