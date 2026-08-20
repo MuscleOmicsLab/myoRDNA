@@ -85,7 +85,7 @@ relative_rDNA_CN <- function(
 
       if (diploid == TRUE)
       {
-        rel_rDNA_CN <- 2.0 * (sum_cov_rDNA / sum_cov_wgenome)
+        rel_rDNA_CN <- (sum_cov_rDNA / sum_cov_wgenome)
       } else
       {
         rel_rDNA_CN <- (sum_cov_rDNA / sum_cov_wgenome)
@@ -111,7 +111,7 @@ relative_rDNA_CN <- function(
 
       if (diploid == TRUE)
       {
-        rel_rDNA_CN <- 2.0 * (sum_cov_rDNA / sum_cov_wgenome)
+        rel_rDNA_CN <- (sum_cov_rDNA / sum_cov_wgenome)
       } else
       {
         rel_rDNA_CN <- (sum_cov_rDNA / sum_cov_wgenome)
