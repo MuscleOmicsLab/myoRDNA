@@ -1,6 +1,6 @@
 Package: myoRDNA
 Title: Tools for Calculating for rDNA in Muscle Sequencing Data
-Version: 0.0.0.9000
+Version: 0.0.1.0
 Authors@R:
     person(given = "Daniel", family = "Vaughan", role = c("aut", "cre"), email = "daniel.1.vaughan@kcl.ac.uk")
 Description: Functions for working with rDNA data generated from sequencing experiments. The package includes functions to calculate the relative rDNA copy number from coverage data, as well as functions to calculate the absolute rDNA copy number using methylation data.
