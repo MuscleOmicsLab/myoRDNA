@@ -47,11 +47,10 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
-
 *.json
-
 *.env
-
+/inst
+/inst/*
 *.pem 
 *.key
 *.log
