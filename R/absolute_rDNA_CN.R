@@ -51,7 +51,7 @@ absolute_rDNA_CN <- function(
   {
     for (i in 1:num_samples)
     {
-      chr_data <- Meth_object[[i]][Meth_object[[i]]$chr %in% c(paste0("chr", 1:19)), ]
+      chr_data <- Meth_object[[i]][sub("^chr", "", Meth_object[[i]]$chr) %in% as.character(1:19),]
       rDNA_data <- Meth_object[[i]][Meth_object[[i]]$chr == rDNA_chr, ]
       cov_wgenome <- mean(chr_data$coverage, na.rm = TRUE)
       cov_rDNA <- mean(rDNA_data$coverage, na.rm = TRUE)
@@ -77,7 +77,7 @@ absolute_rDNA_CN <- function(
   {
     for (i in 1:num_samples)
     {
-      chr_data <- Meth_object[[i]][!Meth_object[[i]]$chr == rDNA_chr, ]
+      chr_data <- Meth_object[[i]]
       rDNA_data <- Meth_object[[i]][Meth_object[[i]]$chr == rDNA_chr, ]
       cov_wgenome <- mean(chr_data$coverage, na.rm = TRUE)
       cov_rDNA <- mean(rDNA_data$coverage, na.rm = TRUE)
