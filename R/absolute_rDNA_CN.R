@@ -43,10 +43,20 @@ absolute_rDNA_CN <- function(
     rDNA_chr,
     diploid = TRUE)
 {
+  # Initialize a dataframe to store results
+  results_df <- data.frame(
+    Sample_ID = character(),
+    Genome_Depth = numeric(),
+    rDNA_Depth = numeric(),
+    Absolute_rDNA_CN = numeric(),
+    stringsAsFactors = FALSE
+  )
+
+  # Print header
   cat("Sample ID", "Genome Depth", "rDNA Depth", "absolute rDNA CN",
       sep = "\t",
       fill = TRUE)
-  
+
   if (autosomes == TRUE)
   {
     for (i in 1:num_samples)
@@ -55,7 +65,7 @@ absolute_rDNA_CN <- function(
       rDNA_data <- Meth_object[[i]][Meth_object[[i]]$chr == rDNA_chr, ]
       cov_wgenome <- mean(chr_data$coverage, na.rm = TRUE)
       cov_rDNA <- mean(rDNA_data$coverage, na.rm = TRUE)
-      
+
       if (diploid == TRUE)
       {
         abs_rDNA_CN <- 2.0 * (cov_rDNA / cov_wgenome)
@@ -63,7 +73,8 @@ absolute_rDNA_CN <- function(
       {
         abs_rDNA_CN <- (cov_rDNA / cov_wgenome)
       }
-      
+
+      # Print the output
       cat(
         Meth_object[[i]]@sample.id,
         cov_wgenome,
@@ -71,6 +82,18 @@ absolute_rDNA_CN <- function(
         abs_rDNA_CN,
         sep = "\t",
         fill = TRUE
+      )
+
+      # Append results to the dataframe
+      results_df <- rbind(
+        results_df,
+        data.frame(
+          Sample_ID = Meth_object[[i]]@sample.id,
+          Genome_Depth = cov_wgenome,
+          rDNA_Depth = cov_rDNA,
+          Absolute_rDNA_CN = abs_rDNA_CN,
+          stringsAsFactors = FALSE
+        )
       )
     }
   } else
@@ -81,7 +104,7 @@ absolute_rDNA_CN <- function(
       rDNA_data <- Meth_object[[i]][Meth_object[[i]]$chr == rDNA_chr, ]
       cov_wgenome <- mean(chr_data$coverage, na.rm = TRUE)
       cov_rDNA <- mean(rDNA_data$coverage, na.rm = TRUE)
-      
+
       if (diploid == TRUE)
       {
         abs_rDNA_CN <- 2.0 * (cov_rDNA / cov_wgenome)
@@ -89,7 +112,8 @@ absolute_rDNA_CN <- function(
       {
         abs_rDNA_CN <- (cov_rDNA / cov_wgenome)
       }
-      
+
+      # Print the output
       cat(
         Meth_object[[i]]@sample.id,
         cov_wgenome,
@@ -98,6 +122,21 @@ absolute_rDNA_CN <- function(
         sep = "\t",
         fill = TRUE
       )
+
+      # Append results to the dataframe
+      results_df <- rbind(
+        results_df,
+        data.frame(
+          Sample_ID = Meth_object[[i]]@sample.id,
+          Genome_Depth = cov_wgenome,
+          rDNA_Depth = cov_rDNA,
+          Absolute_rDNA_CN = abs_rDNA_CN,
+          stringsAsFactors = FALSE
+        )
+      )
     }
   }
+
+  # Return the dataframe
+  return(results_df)
 }

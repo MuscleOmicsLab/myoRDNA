@@ -58,8 +58,8 @@ rsconnect/
 /testing
 /testing/*
 testing.R
-/test
-/test/*
+/tests
+/tests/*
 *.bam
 *.fastq
 *.fq

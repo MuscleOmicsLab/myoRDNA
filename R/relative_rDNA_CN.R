@@ -44,6 +44,16 @@ relative_rDNA_CN <- function(
     rDNA_chr,
     diploid = TRUE)
 {
+  # Initialize a dataframe to store results
+  results_df <- data.frame(
+    Sample_ID = character(),
+    Total_Number_of_Reads = numeric(),
+    Number_of_Reads_rDNA = numeric(),
+    Relative_rDNA_CN = numeric(),
+    stringsAsFactors = FALSE
+  )
+
+  # Print header
   cat("Sample ID", "Total Number of reads", "Number of reads rDNA", "relative rDNA CN",
       sep = "\t",
       fill = TRUE)
@@ -52,7 +62,7 @@ relative_rDNA_CN <- function(
   {
     for (i in 1:num_samples)
     {
-      chr_data <- Meth_object[[i]]
+      chr_data <- Meth_object[[i]][sub("^chr", "", Meth_object[[i]]$chr) %in% as.character(1:19),]
       rDNA_data <- Meth_object[[i]][Meth_object[[i]]$chr == rDNA_chr, ]
       sum_cov_wgenome <- sum(chr_data$coverage, na.rm = TRUE)
       sum_cov_rDNA <- sum(rDNA_data$coverage, na.rm = TRUE)
@@ -65,6 +75,7 @@ relative_rDNA_CN <- function(
         rel_rDNA_CN <- (sum_cov_rDNA / sum_cov_wgenome)
       }
 
+      # Print the output
       cat(
         Meth_object[[i]]@sample.id,
         sum_cov_wgenome,
@@ -72,6 +83,18 @@ relative_rDNA_CN <- function(
         rel_rDNA_CN,
         sep = "\t",
         fill = TRUE
+      )
+
+      # Append results to the dataframe
+      results_df <- rbind(
+        results_df,
+        data.frame(
+          Sample_ID = Meth_object[[i]]@sample.id,
+          Total_Number_of_Reads = sum_cov_wgenome,
+          Number_of_Reads_rDNA = sum_cov_rDNA,
+          Relative_rDNA_CN = rel_rDNA_CN,
+          stringsAsFactors = FALSE
+        )
       )
     }
   } else
@@ -91,6 +114,7 @@ relative_rDNA_CN <- function(
         rel_rDNA_CN <- (sum_cov_rDNA / sum_cov_wgenome)
       }
 
+      # Print the output
       cat(
         Meth_object[[i]]@sample.id,
         sum_cov_wgenome,
@@ -99,6 +123,21 @@ relative_rDNA_CN <- function(
         sep = "\t",
         fill = TRUE
       )
+
+      # Append results to the dataframe
+      results_df <- rbind(
+        results_df,
+        data.frame(
+          Sample_ID = Meth_object[[i]]@sample.id,
+          Total_Number_of_Reads = sum_cov_wgenome,
+          Number_of_Reads_rDNA = sum_cov_rDNA,
+          Relative_rDNA_CN = rel_rDNA_CN,
+          stringsAsFactors = FALSE
+        )
+      )
     }
   }
+
+  # Return the dataframe
+  return(results_df)
 }
