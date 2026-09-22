@@ -1,0 +1,39 @@
+---
+name: R Package Validation report
+
+on: # Run this action when a release is published
+  release:
+    types: [published]
+
+jobs:
+  r-pkg-validation:
+    name: Generate validation report
+    runs-on: ubuntu-latest
+    container:
+      image: rocker/verse:4.5.3
+    # Set Github token permissions
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: write
+      packages: write
+      deployments: write
+    steps:
+      - name: Checkout myoRDNA
+        uses: actions/checkout@v4
+
+      - name: Build validation report
+        id: validation
+        uses: insightsengineering/thevalidatoR@v2
+        # see parameters above for custom templates and other formats
+
+      # Upload the validation report to the release
+      - name: Attach report to GitHub Release
+        if: success()
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file: ./validation_report.pdf
+          asset_name: myoRDNA-validation-report.pdf
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }}
+          overwrite: true
