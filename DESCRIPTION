@@ -1,15 +1,35 @@
 Package: myoRDNA
 Title: Tools for Calculating for rDNA in Muscle Sequencing Data
-Version: 0.0.1.0
-Authors@R:
-    person(given = "Daniel", family = "Vaughan", role = c("aut", "cre"), email = "daniel.1.vaughan@kcl.ac.uk")
+Version: 0.99.0
+Authors@R: c(
+    person(
+      given = "Daniel", 
+      family = "Vaughan", 
+      role = c("aut", "cre"), 
+      email = "daniel.1.vaughan@kcl.ac.uk",
+      comment = c(ORCID = "0009-0001-6165-2024")
+    ),
+    person(
+        given = "Medical Research Council (MRC)",
+        role = "fnd"
+    )
+    )
 Description: Functions for working with rDNA data generated from sequencing experiments. The package includes functions to calculate the relative rDNA copy number from coverage data, as well as functions to calculate the absolute rDNA copy number using methylation data.
-Depends: R (>= 4.0.0)
+Depends: R (>= 4.5.0)
 Imports: 
   methylKit,
-  GenomicRanges
-License: MIT
+  GenomicRanges,
+  IRanges,
+  methods,
+  glmmTMB
+License: MIT + file LICENSE
 Encoding: UTF-8
 URL: https://github.com/MuscleOmicsLab/myoRDNA
 BugReports: https://github.com/MuscleOmicsLab/myoRDNA/issues
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.0
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
+biocViews: Software, DNAMethylation, Epigenetics, CopyNumberVariation, Sequencing, Coverage
