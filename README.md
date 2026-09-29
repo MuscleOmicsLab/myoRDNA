@@ -1,6 +1,12 @@
 ### myoRDNA
-A toolkit for analysing rDNA methylation data from muscle and used in unison 
-with methylKit.
+`myoRDNA` is an R package developed by MuscleOmicsLab
+to facilitate the analysis of rDNA copy number and DNA
+methylation using high-throughput sequencing data.
+
+The package provides a collection of functions for extracting
+rDNA-specific data, estimating copy number, calculating
+methylation levels and identifying differential methylation
+between experimental conditions.
 
 ## Installation
 Given that this package is currently under development installation must 
