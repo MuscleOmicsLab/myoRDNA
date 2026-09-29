@@ -30,8 +30,8 @@ A data frame with columns:
   - `odds_ratio`: Odds ratio for the methylation difference.
   - `p_value`: Raw p-value for the methylation difference.
   - `p_adjust`: Adjusted p-value after multiple-testing correction.
-  - `p_young`: Predicted methylation probability for the control group.
-  - `p_old`: Predicted methylation probability for the treatment group.
+  - `p_cond_1`: Predicted methylation probability for the control group.
+  - `p_cond_2`: Predicted methylation probability for the treatment group.
   - `meth_diff`: Methylation difference between groups (in percentage 
   points).
   - `log10_p_adjust`: Negative log10 of the adjusted p-value.
