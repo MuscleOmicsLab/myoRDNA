@@ -7,22 +7,60 @@
 get_unique_chr_names(Meth_object, num_samples)
 }
 \arguments{
-\item{Meth_object}{A named list of data frames or objects (e.g., `meth_raw`), where each element
-represents a sample and contains a `chr` column with chromosome names.}
+\item{Meth_object}{A named list of data frames or objects 
+(e.g., `meth_raw`),where each element represents a sample and contains a
+ `chr` column with chromosome names.}
 
-\item{num_samples}{An integer specifying the number of samples in `Meth_object` to check.}
+\item{num_samples}{An integer specifying the number of samples in 
+`Meth_object` to check.}
 }
 \value{
-A character vector of unique chromosome names from the first sample, if all samples are consistent.
-  If inconsistencies are found, the function stops execution and raises an error.
+A character vector of unique chromosome names from the first sample, 
+if all samples are consistent. If inconsistencies are found, the function 
+stops execution and raises an error.
 }
 \description{
-This function extracts the unique chromosome names from the first sample in a `Meth_object`
-(e.g., a list of methylation data) and checks if all samples have the same chromosomes.
-If inconsistencies are found, it raises an error and lists the problematic samples.
+This function extracts the unique chromosome names from the first sample 
+in a `Meth_object` (e.g., a list of methylation data) and checks if all
+ samples have the same chromosomes. If inconsistencies are found, it raises
+  an error and lists the problematic samples.
 }
 \note{
-- The function assumes `Meth_object` is a **named list** (so `names(Meth_object)[i]` returns the sample name).
-- If `Meth_object` is unnamed, replace `names(meth_raw)[i]` with a custom identifier (e.g., `paste("Sample", i)`).
-- The function uses `setequal()` to ensure exact matching of chromosome sets.
+- The function assumes `Meth_object` is a **named list** 
+(so `names(Meth_object)[i]` returns the sample name).
+- If `Meth_object` is unnamed, replace `names(meth_raw)[i]` with a 
+custom identifier (e.g., `paste("Sample", i)`).
+- The function uses `setequal()` to ensure exact matching of chromosome 
+sets.
+}
+\examples{
+# Load the example mouse WGBS dataset
+file_path <- system.file(
+  "extdata",
+  "filtered_meth_raw_chr1_chrRDNAm.rds",
+  package = "myoRDNA",
+  mustWork = TRUE
+)
+
+loaded_data <- readRDS(file_path)
+
+# Define experimental conditions
+# 0 = OLD, 1 = YOUNG
+treatment <- c(
+  0, 0, 0, 0, 0, 0,
+  1, 1, 1, 1
+)
+
+num_samples <- length(treatment)
+
+# Extract unique chromosome names
+chromosome_names <- get_unique_chr_names(
+  loaded_data,
+  num_samples
+)
+
+# Display the results
+print(chromosome_names)
+
+
 }

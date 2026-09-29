@@ -1,21 +1,59 @@
 #' Get Unique Chromosome Names and Check Consistency
 #'
-#' This function extracts the unique chromosome names from the first sample in a `Meth_object`
-#' (e.g., a list of methylation data) and checks if all samples have the same chromosomes.
-#' If inconsistencies are found, it raises an error and lists the problematic samples.
+#' This function extracts the unique chromosome names from the first sample 
+#' in a `Meth_object` (e.g., a list of methylation data) and checks if all
+#'  samples have the same chromosomes. If inconsistencies are found, it raises
+#'   an error and lists the problematic samples.
 #'
-#' @param Meth_object A named list of data frames or objects (e.g., `meth_raw`), where each element
-#'   represents a sample and contains a `chr` column with chromosome names.
-#' @param num_samples An integer specifying the number of samples in `Meth_object` to check.
+#' @param Meth_object A named list of data frames or objects 
+#' (e.g., `meth_raw`),where each element represents a sample and contains a
+#'  `chr` column with chromosome names.
+#' @param num_samples An integer specifying the number of samples in 
+#' `Meth_object` to check.
 #'
-#' @return A character vector of unique chromosome names from the first sample, if all samples are consistent.
-#'   If inconsistencies are found, the function stops execution and raises an error.
+#' @return A character vector of unique chromosome names from the first sample, 
+#' if all samples are consistent. If inconsistencies are found, the function 
+#' stops execution and raises an error.
 #'
 #'
 #' @note
-#' - The function assumes `Meth_object` is a **named list** (so `names(Meth_object)[i]` returns the sample name).
-#' - If `Meth_object` is unnamed, replace `names(meth_raw)[i]` with a custom identifier (e.g., `paste("Sample", i)`).
-#' - The function uses `setequal()` to ensure exact matching of chromosome sets.
+#' - The function assumes `Meth_object` is a **named list** 
+#' (so `names(Meth_object)[i]` returns the sample name).
+#' - If `Meth_object` is unnamed, replace `names(meth_raw)[i]` with a 
+#' custom identifier (e.g., `paste("Sample", i)`).
+#' - The function uses `setequal()` to ensure exact matching of chromosome 
+#' sets.
+#'
+#' 
+#' @examples
+#' # Load the example mouse WGBS dataset
+#' file_path <- system.file(
+#'   "extdata",
+#'   "filtered_meth_raw_chr1_chrRDNAm.rds",
+#'   package = "myoRDNA",
+#'   mustWork = TRUE
+#' )
+#'
+#' loaded_data <- readRDS(file_path)
+#'
+#' # Define experimental conditions
+#' # 0 = OLD, 1 = YOUNG
+#' treatment <- c(
+#'   0, 0, 0, 0, 0, 0,
+#'   1, 1, 1, 1
+#' )
+#'
+#' num_samples <- length(treatment)
+#'
+#' # Extract unique chromosome names
+#' chromosome_names <- get_unique_chr_names(
+#'   loaded_data,
+#'   num_samples
+#' )
+#'
+#' # Display the results
+#' print(chromosome_names)
+#'
 #'
 #' @export
 get_unique_chr_names <- function(
@@ -26,7 +64,7 @@ get_unique_chr_names <- function(
   inconsistent_samples <- character(0)  # Store names of inconsistent samples
   
   # Check chromosomes are consistent across all samples
-  for (i in 1:num_samples) {
+  for (i in seq_len(num_samples)) {
     current_chromosomes <- unique(Meth_object[[i]]$chr)
     
     # Check if current sample's chromosomes match the initial set
@@ -43,9 +81,6 @@ get_unique_chr_names <- function(
       paste(inconsistent_samples, collapse = ", ")
     )
   }
-  
-  print("The list of unique chromosomes")
-  print(unique_chromosomes)
   
   # Return a list of all unique chromosomes
   return(unique_chromosomes)

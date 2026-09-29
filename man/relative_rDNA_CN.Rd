@@ -13,43 +13,97 @@ relative_rDNA_CN(
 )
 }
 \arguments{
-\item{Meth_object}{A named list of `methylRaw` objects (from `methylKit`) or data frames,
-where each element represents a sample and contains columns `chr` (chromosome name) and
-`coverage` (coverage depth).}
+\item{Meth_object}{A named list of `methylRaw` objects (from `methylKit`) 
+or data frames, where each element represents a sample and contains 
+columns `chr` (chromosome name)` and `coverage` (coverage depth).}
 
-\item{num_samples}{An integer specifying the number of samples in `Meth_object` to process.}
+\item{num_samples}{An integer specifying the number of samples in 
+`Meth_object` to process.}
 
-\item{autosomes}{A logical (`TRUE`/`FALSE`) indicating whether to use **autosomes (chromosomes 1-19)**
-as the reference for genome coverage. If `FALSE`, the reference is the **entire genome**.
-Default: `TRUE`.}
+\item{autosomes}{A logical (`TRUE`/`FALSE`) indicating whether to use 
+**autosomes (chromosomes 1-19)** as the reference for genome coverage. 
+If `FALSE`, the reference is the **entire genome**. Default: `TRUE`.}
 
-\item{rDNA_chr}{A character string specifying the name of the rDNA chromosome (e.g., `"chrRDNAm"`).}
+\item{rDNA_chr}{A character string specifying the name of the rDNA 
+chromosome (e.g., `"chrRDNAm"`).}
 
-\item{diploid}{A logical (`TRUE`/`FALSE`) indicating whether the genome is **diploid** (2 copies of each chromosome).
-If `TRUE`, the relative rDNA copy number is multiplied by 2. Default: `TRUE`.}
+\item{diploid}{A logical (`TRUE`/`FALSE`) indicating whether the genome is 
+**diploid** (2 copies of each chromosome). If `TRUE`, the relative rDNA 
+copy number is multiplied by 2. Default: `TRUE`.}
 }
 \value{
-This function **prints** a tab-separated table to the console with the following columns:
-\itemize{
-  \item{Sample ID:}{ The sample identifier (extracted from `Meth_object[[i]]@sample.id`).}
-  \item{Total Number of reads:}{ The total coverage (sum of `coverage` column) for the reference region (autosomes or entire genome).}
-  \item{Number of reads rDNA:}{ The total coverage (sum of `coverage` column) for the rDNA region.}
-  \item{relative rDNA CN:}{ The relative rDNA copy number, calculated as `(sum_cov_rDNA / sum_cov_wgenome) * 2` (if diploid) or `(sum_cov_rDNA / sum_cov_wgenome)` (if haploid).}
+This function **prints** a tab-separated table to the console with the 
+following columns:
+\describe{
+  \item{Sample ID:}{ The sample identifier (extracted from 
+  `Meth_object[[i]]@sample.id`).}
+  \item{Total Number of reads:}{ The total coverage (sum of `coverage` 
+  column) for the reference region (autosomes or entire genome).}
+  \item{Number of reads rDNA:}{ The total coverage (sum of `coverage` 
+  column) for the rDNA region.}
+  \item{relative rDNA CN:}{ The relative rDNA copy number, calculated as 
+  `(sum_cov_rDNA / sum_cov_wgenome) * 2` (if diploid) or 
+  `(sum_cov_rDNA / sum_cov_wgenome)` (if haploid).}
 }
 The function does **not** return a value but prints results directly.
 }
 \description{
-This function calculates the **relative rDNA copy number** for each sample in a `Meth_object`
-(e.g., a list of methylation data or coverage data). It compares the **total coverage** of the rDNA region
-to the **total coverage** of either the autosomes (chromosomes 1-19) or the entire genome.
+This function calculates the **relative rDNA copy number** for each sample 
+in a `Meth_object` (e.g., a list of methylation data or coverage data).
+ It compares the **total coverage** of the rDNA region to the 
+ **total coverage** of either the autosomes (chromosomes 1-19) or the 
+ entire genome.
 The relative copy number is adjusted for ploidy (diploid or haploid).
 }
 \note{
-- If `autosomes = TRUE`, the reference coverage (`sum_cov_wgenome`) is calculated from **all chromosomes** in the sample.
-  This is a **deviation from the function name**, as it does not restrict to autosomes (chromosomes 1-19).
-  To fix this, update the filtering logic for `chr_data` to include only autosomes (e.g., `chr_data <- Meth_object[[i]][Meth_object[[i]]$chr %in% paste0("chr", 1:19), ]`).
-- If `autosomes = FALSE`, the reference coverage is calculated from **all chromosomes** in the sample.
-- The function assumes `Meth_object` is a **named list** and that each element has a `@sample.id` slot (if using `methylRaw` objects) or can be accessed via `names(Meth_object)[i]`.
-- If `sum_cov_wgenome` is `0`, the function will produce `Inf` or `NA` for `rel_rDNA_CN`. Add a check for `sum_cov_wgenome > 0` if this is a concern.
-- The function uses `cat` to print tab-separated output. To capture the output, redirect it to a file or use `capture.output()`.
+- If `autosomes = TRUE`, the reference coverage (`sum_cov_wgenome`) is 
+calculated from **all chromosomes** in the sample. This is a 
+**deviation from the function name**, as it does not restrict to autosomes 
+(chromosomes 1-19). To fix this, update the filtering logic for `chr_data` 
+to include only  autosomes 
+(e.g., `chr_data <- Meth_object[[i]][Meth_object[[i]]$chr` 
+`%in% paste0("chr", 1:19), ]`).
+- If `autosomes = FALSE`, the reference coverage is calculated from 
+**all chromosomes** in the sample.
+- The function assumes `Meth_object` is a **named list** and that each 
+element has a `@sample.id` slot (if using `methylRaw` objects) or can be 
+accessed via `names(Meth_object)[i]`.
+- If `sum_cov_wgenome` is `0`, the function will produce `Inf` or `NA` for 
+`rel_rDNA_CN`. Add a check for `sum_cov_wgenome > 0` if this is a concern.
+- The function uses `cat` to print tab-separated output. To capture the 
+output, redirect it to a file or use `capture.output()`.
+}
+\examples{
+# Load the example mouse WGBS dataset
+file_path <- system.file(
+  "extdata",
+  "example_methylation_small.rds",
+  package = "myoRDNA",
+  mustWork = TRUE
+)
+
+loaded_data <- readRDS(file_path)
+
+# Define experimental conditions
+# 0 = OLD, 1 = YOUNG
+treatment <- c(
+  0, 0, 0, 0, 0, 0,
+  1, 1, 1, 1
+)
+
+num_samples <- length(treatment)
+
+# Calculate relative rDNA copy number
+rel_out <- relative_rDNA_CN(
+  Meth_object = loaded_data,
+  num_samples = num_samples,
+  autosomes = TRUE,
+  rDNA_chr = "chrRDNAm",
+  diploid = TRUE
+)
+
+# Display the results
+print(rel_out)
+
+
 }

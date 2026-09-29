@@ -20,5 +20,39 @@ A subset of `meth_object` containing only the rDNA chromosome data.
 Extracts all data associated with the rDNA chromosome from a `meth_object`.
 }
 \examples{
-get_rDNA_data(meth_object, num_samples = 10, rDNA_chr_name = "rDNAm")
+# Load the example mouse WGBS dataset
+file_path <- system.file(
+  "extdata",
+  "filtered_meth_raw_chr1_chrRDNAm.rds",
+  package = "myoRDNA",
+  mustWork = TRUE
+)
+
+loaded_data <- readRDS(file_path)
+
+# Define experimental conditions
+# 0 = OLD, 1 = YOUNG
+treatment <- c(
+  0, 0, 0, 0, 0, 0,
+  1, 1, 1, 1
+)
+
+num_samples <- length(treatment)
+
+# Construct a methylRawList object
+loaded_data <- methylKit::methylRawList(
+  loaded_data,
+  treatment = treatment
+)
+
+# Extract methylation data for the rDNA chromosome
+meth_rDNA <- get_rDNA_data(
+  meth_object = loaded_data,
+  num_samples = num_samples,
+  rDNA_chr_name = "chrRDNAm"
+)
+
+# Inspect the extracted data
+print(meth_rDNA)
+
 }
