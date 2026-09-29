@@ -1,0 +1,1089 @@
+---
+title: "Introduction to myoRDNA"
+author: "MuscleOmicsLab"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Introduction to myoRDNA}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r library}
+library(myoRDNA)
+```
+
+# Introduction
+
+Ribosomal DNA (rDNA) consists of repetitive genomic sequences
+that encode ribosomal RNA (rRNA), an essential structural and
+functional component of ribosomes. The organisation, copy number
+and epigenetic regulation of rDNA are important determinants
+of ribosome biogenesis and cellular protein synthesis.
+
+Variation in rDNA copy number and DNA methylation has been
+investigated in the context of ageing, cellular differentiation,
+disease and changes in cellular metabolic activity. However,
+the repetitive organisation of rDNA presents substantial
+challenges for conventional sequencing and bioinformatics
+approaches, particularly when estimating copy number or
+analysing DNA methylation.
+
+`myoRDNA` is an R package developed by MuscleOmicsLab
+to facilitate the analysis of rDNA copy number and DNA
+methylation using high-throughput sequencing data.
+
+The package provides a collection of functions for extracting
+rDNA-specific data, estimating copy number, calculating
+methylation levels and identifying differential methylation
+between experimental conditions.
+
+# Package functionality
+
+`myoRDNA` provides tools for four principal analytical tasks:
+
+1. **rDNA data extraction and preprocessing:** Identifying
+   rDNA-associated sequencing data, extracting genomic
+   regions of interest and adjusting genomic coordinates.
+
+2. **rDNA copy-number estimation:** Estimating relative
+   and absolute rDNA copy number using sequencing coverage.
+
+3. **DNA methylation analysis:** Quantifying methylation
+   levels at individual CpG sites and across predefined
+   rDNA regions.
+
+4. **Differential methylation analysis:** Comparing methylation
+   between experimental conditions using statistical models,
+   including binomial and beta-binomial regression.
+
+These functions are designed to support reproducible analyses
+and integrate with established R and Bioconductor packages,
+including `methylKit` and `GenomicRanges`.
+
+# Installation
+
+The development version of `myoRDNA` is available from GitHub
+and can be installed using the `remotes` package.
+
+```{r installation, eval=FALSE}
+install.packages("remotes")
+
+remotes::install_github(
+  "MuscleOmicsLab/myoRDNA",
+  dependencies = TRUE
+)
+```
+
+Load the package using:
+
+```{r load-package}
+library(myoRDNA)
+```
+
+# Overview of the analytical workflow
+
+A typical analysis begins with aligned sequencing data
+that have undergone appropriate quality control and
+preprocessing. For how to construct the adapted genomes 
+to extract methylation data for rDNA please visit the 
+paper by [Vaughan et al.](https://doi.org/10.64898/2026.08.13.744441)
+
+
+For DNA methylation analysis, methylated and unmethylated
+read counts can be imported into R using `methylKit`.
+The resulting objects provide the basis for downstream
+analyses implemented in `myoRDNA`. The exact preprocessing 
+requirements depend on the sequencing technology, reference 
+genome and experimental design.
+
+# Loading your data into myoRDNA
+
+This section demonstrates how to import and prepare DNA methylation
+data for analysis using `myoRDNA`.
+
+We use an example mouse whole-genome bisulfite sequencing (WGBS)
+dataset comprising ten samples from two experimental groups:
+six old mice (OLD) and four young mice (YOUNG). For additional 
+information about the original dataset and experimental methodology, 
+see the [original publication](https://doi.org/10.1016/j.isci.2025.112144). 
+In this document we make no conclusions about the data, it is simply 
+being used to demonstrate `myoRDNA` and the dataset has been reduced 
+as a result. 
+
+## Step 1: Load the example methylation dataset
+
+The example data are distributed with `myoRDNA` in the
+`inst/extdata` directory.
+
+We use `system.file()` to retrieve the location of the dataset
+within the installed package. This approach ensures that the
+example works regardless of where the package is installed.
+```{r load-data}
+library(myoRDNA)
+library(methylKit)
+
+file_path <- system.file(
+  "extdata",
+  "filtered_meth_raw_chr1_chrRDNAm.rds",
+  package = "myoRDNA",
+  mustWork = TRUE
+)
+
+loaded_data <- readRDS(file_path)
+```
+The RDS file contains previously processed methylation data
+from chromosome 1 and the rDNA chromosome (`chrRDNAm`).
+The underlying data retain information about methylation
+coverage, methylated read counts, unmethylated read counts
+and genomic positions.
+
+As the data have already been processed and saved, users
+do not need to repeat the original sequencing alignment
+and methylation extraction procedures to follow this
+tutorial.
+
+## Step 2: Define experimental conditions
+
+The dataset contains six OLD samples and four YOUNG samples.
+We define a binary treatment vector to distinguish these
+experimental groups:
+
+- `0`: OLD
+- `1`: YOUNG
+
+The order of the treatment assignments must correspond
+exactly to the order of the samples in `loaded_data`.
+```{r define-treatment}
+treatment <- c(
+  0, 0, 0, 0, 0, 0,
+  1, 1, 1, 1
+)
+
+num_samples <- length(treatment)
+```
+This is a necessary component required for interacting with `methylKit` and 
+this can be simply carried over for use in `myoRDNA`. The number of samples 
+needs to be a numeric value and should be either the number of samples in the
+whole dataset or across two different conditions. We also define a named list 
+containing the sequencing accession numbers associated with each condition.
+```{r define-samples}
+samples <- list(
+  'OLD' = c(
+    "SRR28431752", "SRR28431753", "SRR28431754", "SRR28431755", 
+    "SRR28431756", "SRR28431757"
+  ),
+  'YOUNG' = c(
+    "SRR28431748", "SRR28431749", "SRR28431750", "SRR28431751"
+  )
+)
+```
+This is an important structure and needs to be of the same format as shown 
+above for tracking samples when comparing rDNA metrics (such as copy number 
+and  aggregate methylation proportion) in the later steps. Please ensure that 
+the sample ids match the sample ids for the corresponding data in `methylKit`, 
+otherwise output will be `NULL`.
+
+## Step 3: Construct a methylRawList object
+
+This step is only necessary for following along and using the `rds` data from 
+the `myoRDNA`, if the user is using these features directly interfacing with the
+`methylKit` object than this isn't needed.
+
+We construct a `methylRawList` object by combining the
+individual sample objects with their treatment assignments.
+
+```{r create-methylrawlist}
+stopifnot(length(loaded_data) == length(treatment))
+
+loaded_data <- methods::new(
+  "methylRawList",
+  loaded_data,
+  treatment = treatment
+)
+```
+
+A `methylRawList` stores the methylation measurements from multiple samples 
+alongside their experimental group assignments. This structure allows 
+methylation data to be processed consistently across samples and enables 
+subsequent comparisons between experimental conditions. 
+
+## Step 4: Extract rDNA methylation data
+
+The example dataset includes methylation measurements from chromosome 1 and the 
+rDNA chromosome.
+
+We use `get_rDNA_data()` to extract only the measurements associated with the 
+rDNA chromosome.
+
+```{r extract-rdna}
+meth_rDNA <- get_rDNA_data(
+  loaded_data,
+  num_samples,
+  rDNA_chr_name = "chrRDNAm"
+)
+```
+
+The `rDNA_chr_name` argument specifies the chromosome identifier used in the 
+adapted reference genome.
+
+In this example, the mouse rDNA chromosome is named `chrRDNAm`. This identifier 
+must match the chromosome name in the original methylation data.
+
+The resulting `meth_rDNA` object contains the rDNA-associated methylation 
+measurements for all ten samples, preserving the information required for
+downstream analysis. If the name of the chromosome associated with rDNA is not 
+known (in this case `chrRDNAm`) the user can make use of the identify unique
+chromosomes.
+```{r unique-chromosomes}
+unique_names <- get_unique_chr_names(
+    loaded_data,
+    num_samples
+)
+```
+This returns an array with the unique chromosome names that are included, 
+additionally it performs a check to verify that all samples have consistent 
+chromosome names. 
+
+## Step 5: Adjust rDNA genomic coordinates
+
+Depending on how the adapted reference genome was
+constructed, rDNA genomic coordinates may require
+adjustment to correspond to the reference sequence
+used for downstream analysis.
+
+The `shifting()` function applies a common coordinate
+transformation to the selected rDNA data.
+
+First, we specify the coordinate cutoff:
+
+```{r define-cutoff}
+cutoff <- 35000
+```
+
+We then apply the coordinate shift:
+
+```{r shift-rdna}
+meth_rDNA_shifted <- shifting(
+  meth_rdna_raw = meth_rDNA,
+  cutoff = cutoff,
+  treatment = treatment
+)
+```
+
+The function identifies the maximum genomic start position across the input 
+samples and calculates the shift as
+
+$$
+s = x_{\max} - c,
+$$
+where $x_{\max}$ denotes the maximum genomic start position and $c$ is the 
+user-defined cutoff. The transformed genomic coordinates are
+
+$$
+x_{\mathrm{shifted}} = x_{\mathrm{original}} - s.
+$$
+The same transformation is applied to the start and end positions of every 
+retained methylation record. Records falling outside the permitted coordinate 
+range are removed, and the transformed data are returned as a `methylRawList`
+containing the original treatment assignments.
+
+The cutoff of 35,000 is specific to the adapted reference used in this example. 
+Users analysing data generated with a different reference should select an 
+appropriate cutoff based on their reference sequence and coordinate convention. 
+The shifting is specific to the human and mouse genome, not enough is known 
+about rDNA contig in the rat for this shifting. 
+
+The need for shifting is obvious when plotting the `numCs` against genomic 
+position. The activity will start just after genomic position at the point $s$. 
+The shifting is vital for regional analysis of the 18S for differential 
+methylation. However, functions surrounding the rDNA copy number will produce an
+interpretative result without shifting.
+
+# rDNA copy-number analysis
+
+Ribosomal DNA (rDNA) is organised into tandemly repeated units, and the number 
+of these repeats can vary between individuals and experimental conditions. 
+Estimating rDNA copy number provides a means of investigating variation in rDNA 
+abundance across biological samples.
+
+`myoRDNA` provides two functions for estimating rDNA copy number:
+
+- `relative_rDNA_CN()`: Estimates relative rDNA copy number using 
+  sequencing coverage.
+- `absolute_rDNA_CN()`: Estimates absolute rDNA copy number by normalising rDNA 
+  coverage against genomic coverage and accounting for genome ploidy.
+  
+These estimators have different sequencing requirements.
+
+| Sequencing method | Relative copy number | Absolute copy number |
+|:------------------|:--------------------:|:--------------------:|
+| Whole-genome bisulfite sequencing (WGBS) | Yes | Yes |
+| Reduced-representation bisulfite sequencing (RRBS) | Yes | No |
+
+Absolute copy-number estimation is restricted to WGBS in `myoRDNA`, as it 
+requires a genome-wide coverage reference. RRBS enriches selected genomic 
+fragments, which makes its sequencing coverage unsuitable for directly 
+estimating absolute genomic copy number.
+
+Relative copy-number estimates can be obtained from either WGBS or RRBS, 
+although comparisons should be restricted to samples generated using compatible 
+sequencing and preprocessing protocols.
+
+## Absolute rDNA copy number
+
+The absolute rDNA copy-number estimator uses the ratio
+of rDNA sequencing coverage to reference genomic
+coverage.
+
+For a diploid genome, the estimator is defined as
+
+$$
+\boxed{
+CN_{\mathrm{absolute}} =
+2 \times
+\frac{\overline{C}_{\mathrm{rDNA}}}
+     {\overline{C}_{\mathrm{genome}}}
+}
+$$
+
+where:
+
+- \(\overline{C}_{\mathrm{rDNA}}\) is the coverage
+  estimate for the rDNA reference sequence.
+- \(\overline{C}_{\mathrm{genome}}\) is the corresponding
+  genomic reference coverage.
+- The factor of two accounts for the two copies of
+  each autosome in a diploid genome.
+
+For a haploid genome, the estimator becomes
+
+$$
+CN_{\mathrm{absolute}} =
+\frac{\overline{C}_{\mathrm{rDNA}}}
+     {\overline{C}_{\mathrm{genome}}}.
+$$
+
+More generally, for a genome with reference ploidy \(P\),
+
+$$
+CN_{\mathrm{absolute}} =
+P \times
+\frac{\overline{C}_{\mathrm{rDNA}}}
+     {\overline{C}_{\mathrm{genome}}}.
+$$
+
+The current implementation supports diploid
+(\(P=2\)) and non-diploid (\(P=1\)) calculations.
+
+### Calculating absolute copy number
+
+We use the previously loaded mouse WGBS dataset
+to demonstrate absolute rDNA copy-number estimation.
+
+```{r absolute-copy-number}
+absolute_CN <- absolute_rDNA_CN(
+  Meth_object = loaded_data,
+  num_samples = num_samples,
+  autosomes = TRUE,
+  rDNA_chr = "chrRDNAm",
+  diploid = TRUE
+)
+```
+
+The function accepts the following arguments:
+
+- `Meth_object`: The methylation dataset containing
+  both rDNA and genomic reference coverage.
+- `num_samples`: The number of samples to analyse.
+- `autosomes`: Specifies whether autosomal coverage
+  should be used as the genomic reference.
+- `rDNA_chr`: The chromosome identifier corresponding
+  to the rDNA reference sequence.
+- `diploid`: Specifies whether to multiply the
+  coverage ratio by two.
+
+For this example, `diploid = TRUE` accounts for
+the diploid mouse genome, and `rDNA_chr = "chrRDNAm"`
+identifies the rDNA reference in the adapted genome.
+
+The resulting copy-number estimates can be inspected
+using:
+
+```{r inspect-absolute-copy-number}
+absolute_CN
+```
+Additionally a readout should appear with results for inspection. These 
+estimates should be interpreted with consideration of reference-genome 
+composition, sequencing coverage, alignment ambiguity and potential biases 
+associated with mapping reads to repetitive rDNA sequences.
+
+## Relative rDNA copy number
+
+Relative rDNA copy number provides a normalised measure of rDNA abundance that 
+can be used to compare samples processed using compatible sequencing protocols.
+Unlike absolute copy-number estimation, relative estimation is supported for 
+both WGBS and RRBS data in `myoRDNA`.
+
+The relative estimator is calculated using the ratio of summed rDNA coverage to 
+summed genomic reference coverage:
+
+$$
+\boxed{
+CN_{\mathrm{relative}} =
+\frac{\displaystyle\sum_{i=1}^{N_r}
+C_{\mathrm{rDNA},i}}
+{\displaystyle\sum_{j=1}^{N_g}
+C_{\mathrm{genome},j}}
+}
+$$
+
+where:
+
+- \(C_{\mathrm{rDNA},i}\) denotes the coverage of
+  the \(i\)-th retained rDNA position.
+- \(C_{\mathrm{genome},j}\) denotes the coverage
+  of the \(j\)-th retained genomic reference position.
+- \(N_r\) and \(N_g\) are the numbers of retained
+  rDNA and genomic reference positions, respectively.
+
+The numerator and denominator therefore represent the total coverage across the 
+rDNA and genomic reference positions used by the estimator. Unlike the absolute 
+estimator, the relative estimator does not apply a diploidy correction in the 
+current implementation.
+
+### Calculating relative copy number
+
+The following example calculates relative rDNA copy number for the previously 
+loaded mouse WGBS dataset.
+```{r relative-copy-number}
+relative_CN <- relative_rDNA_CN(
+  Meth_object = loaded_data,
+  num_samples = num_samples,
+  autosomes = TRUE,
+  rDNA_chr = "chrRDNAm",
+  diploid = TRUE
+)
+```
+The arguments are analogous to those used for `absolute_rDNA_CN()`. Although 
+`diploid = TRUE` is accepted, the current implementation calculates the same 
+relative coverage ratio regardless of this argument. The resulting estimates 
+can be inspected using:
+```{r inspect-relative-copy-number}
+relative_CN
+```
+The same function can also be applied to appropriately prepared RRBS 
+methylation data. However, because RRBS preferentially captures particular 
+genomic fragments, its relative estimates depend on the targeted regions and 
+their representation in the sequencing data. Consequently, relative copy-number 
+estimates from RRBS and WGBS should not be assumed to be directly 
+interchangeable.
+
+## Considerations for copy-number estimation
+
+Several factors should be considered when interpreting rDNA copy-number 
+estimates. First, the repetitive nature of rDNA introduces potential alignment 
+ambiguity. Reads derived from different rDNA repeat units will align to the 
+same reference sequence.
+
+Second, sufficient sequencing coverage is required to obtain stable estimates. 
+In particular, absolute copy-number estimation depends on having a suitable 
+genomic reference against which rDNA coverage can be normalised. This can 
+become particularly difficult with PBAT which typically provides lower 
+alignment rates.
+
+Finally, the adapted reference genome and chromosome identifiers must be 
+consistent with those used during sequencing alignment and methylation 
+extraction. For reproducible analyses, users should document the reference 
+genome, coverage-filtering thresholds, sequencing methodology and genomic 
+regions used for normalisation.
+
+# Regional rDNA methylation analysis
+
+The ribosomal DNA (rDNA) repeat contains several distinct functional regions, 
+including the sequences encoding ribosomal RNA and the internal and external 
+transcribed spacers.
+
+DNA methylation may vary across these regions. Consequently, analysing 
+methylation across the entire rDNA repeat may obscure region-specific 
+variation.
+
+`myoRDNA` provides functions to partition rDNA methylation data into predefined 
+genomic regions and calculate aggregate methylation metrics for individual 
+samples and experimental conditions.
+
+## Step 1: Partition rDNA into genomic regions
+
+The `sort_by_rDNA_region()` function separates methylation measurements into 
+their corresponding rDNA regions using predefined genomic coordinates.
+
+The package supports the following reference assemblies:
+
+| Species | Reference assembly |
+|:--------|:-------------------|
+| Mouse | `mm39` |
+| Rat | `rno7` |
+| Human | `hg38` |
+
+For the example mouse WGBS dataset, we use the `mm39` reference assembly.
+
+```{r sort-rdna-regions}
+region_res <- sort_by_rDNA_region(
+  meth_rDNA,
+  num_samples,
+  species = "mm39",
+  min_cov = 10
+)
+```
+
+The `species` argument specifies the reference assembly used to identify the 
+rDNA regions. Users analysing rat or human data should specify `rno7` or
+`hg38`, respectively.
+
+The `min_cov` argument defines the minimum sequencing coverage required for a 
+CpG position to be retained. In this example, CpG positions with fewer than ten
+sequencing reads are excluded.
+
+The resulting `region_res` object organises methylation measurements by sample 
+and rDNA region, allowing downstream calculations to be performed independently
+for each region.
+### rDNA regions
+
+Depending on the reference assembly, rDNA measurements
+can be assigned to the following annotated regions:
+
+- **18S:** Encodes the 18S ribosomal RNA component of the small ribosomal 
+subunit.
+- **5.8S:** Encodes 5.8S ribosomal RNA.
+- **28S:** Encodes the 28S ribosomal RNA component of the large ribosomal 
+subunit.
+- **5' ETS:** The external transcribed spacer located upstream of the 18S 
+region.
+- **ITS1:** The internal transcribed spacer between the 18S and 5.8S regions.
+- **ITS2:** The internal transcribed spacer between the 5.8S and 28S regions.
+- **3' ETS:** The external transcribed spacer downstream of the 28S region.
+
+These regions can be analysed individually to investigate spatial variation in 
+rDNA methylation. It is important to note that the human and mouse have all 
+regions in the list above. However, the rate is limited to the `18S`, `28S`, 
+and `5.8S`.
+
+## Step 2: Calculate aggregate methylation metrics
+
+Following regional partitioning, the `calculate_aggregate_meth()` function can 
+be used to summarise methylation measurements within each rDNA region.
+
+For this example, we calculate aggregate methylation for the 18S region.
+
+```{r aggregate-methylation}
+region <- "18S"
+
+aggregate_18S <- calculate_aggregate_meth(
+  region_res,
+  region,
+  conditions = samples,
+  med = FALSE
+)
+```
+The `region` argument specifies the rDNA region to analyse, while `conditions` 
+associates samples with their experimental groups.
+
+The `med` argument controls the choice of summary statistic. In the mean-based 
+calculation shown here, it is set to `FALSE`.
+
+The resulting object contains aggregate methylation measurements for the 
+selected region, organised according to the supplied experimental conditions.
+
+## Mathematical formulation of methylation proportions
+
+Let $N_{C,i}$ and $N_{T,i}$ denote the methylated and unmethylated read counts, 
+respectively, at CpG position $i$ within a selected rDNA region.
+
+The sequencing coverage at that position is
+
+$$
+C_i = N_{C,i} + N_{T,i}.
+$$
+
+The methylation proportion at each retained CpG position is defined as
+
+$$
+p_i =
+\frac{N_{C,i}}
+     {N_{C,i}+N_{T,i}}.
+$$
+
+Only CpG positions satisfying the specified minimum coverage threshold are 
+included in the aggregation.
+
+### Mean methylation proportion
+
+The arithmetic mean methylation proportion across a region is
+
+$$
+\boxed{
+\overline{p}_R =
+\frac{1}{N_R}
+\sum_{i=1}^{N_R}p_i
+}
+$$
+where $N_R$ denotes the number of retained CpG positions in region $R$.
+
+This metric assigns equal weight to every retained CpG position, regardless of 
+its individual sequencing coverage. Currently there is no coverage weighted 
+calculation for the methylation proportion in `myoRDNA`, if the user needs such
+a metric this has to be inputted manually.
+
+### Median methylation proportion
+
+An alternative summary statistic is the median methylation proportion:
+
+$$
+\boxed{
+\widetilde{p}_R =
+\operatorname{median}
+\left(p_1,p_2,\ldots,p_{N_R}\right)
+}
+$$
+The median describes the central tendency of the CpG methylation proportions 
+and is less sensitive to extreme values than the arithmetic mean. However, a 
+sensible approach is to review both and determine if there is a significant 
+difference. 
+
+Regional methylation measurements can subsequently be compared between 
+experimental conditions to investigate differences in the epigenetic regulation 
+of rDNA.
+
+# Differential rDNA methylation analysis
+
+The repetitive organisation of ribosomal DNA (rDNA) presents several challenges 
+for differential methylation analysis. Individual rDNA repeat units can exhibit 
+heterogeneous methylation patterns, while sequence similarity between repeats 
+can introduce ambiguity during read alignment.
+
+Consequently, methylation measurements may exhibit greater variability than 
+predicted by conventional binomial models. This phenomenon, known as 
+*overdispersion*, can lead to underestimated standard errors and potentially 
+inflated statistical significance if it is not appropriately considered.
+
+To accommodate different levels of variability,
+`myoRDNA` supports three statistical approaches:
+
+1. Binomial logistic regression, implemented using `glm()`.
+2. Quasi-binomial logistic regression, implemented using `glm()`.
+3. Beta-binomial logistic regression, implemented using `glmmTMB`.
+
+These models can be applied at two levels:
+
+- **Site-level analysis:** Differential methylation is
+  evaluated independently at individual CpG positions
+  within a selected rDNA region.
+- **Region-level analysis:** Methylated and unmethylated
+  read counts are summed across the selected rDNA
+  region before comparing experimental conditions.
+
+All three approaches use the same logistic regression formulation, but differ 
+in their assumptions about the variance of methylation measurements.
+
+## Statistical methodology
+
+### Binomial logistic regression
+
+This form of regression follows the same methodology as outlined by `methylKit`
+and therefore, allows users to use the widely reported and tested form of 
+logistic regression. We recommend that any user of `myoRDNA` implements the
+binomial method first and move to `quasi-binomial` or `beta-binomial` once they
+suspect that the $p$-values are inflated. 
+
+Binomial logistic regression models the probability of methylation as a 
+function of experimental condition. Let $Y_i$ denote the number of methylated 
+reads observed for sample $i$, with sequencing coverage $n_i$. 
+The model assumes
+
+$$
+Y_i \sim \operatorname{Binomial}(n_i,p_i),
+$$
+where $p_i$ is the underlying methylation probability. For two experimental 
+conditions, the model is
+
+$$
+\operatorname{logit}(p_i)
+=
+\log\left(\frac{p_i}{1-p_i}\right)
+=
+\beta_0+\beta_1 T_i.
+$$
+Here, $T_i=0$ represents the CONTROL condition and $T_i=1$ represents the 
+CONDITION_1 condition. Multiple condition differential methylation analysis has
+not been implemented yet. 
+
+The intercept $\beta_0$ describes the log-odds of methylation in OLD samples, 
+while $\beta_1$ describes the difference in log-odds between YOUNG and OLD 
+samples. The model assumes that the variance of the methylated read count is
+
+$$
+\operatorname{Var}(Y_i)
+=
+n_i p_i(1-p_i).
+$$
+
+### Quasi-binomial logistic regression
+
+A limitation of the conventional binomial model is its assumption that the 
+variance is completely determined by the methylation probability and sequencing 
+coverage.
+
+In biological datasets, additional variability may arise from differences 
+between individuals, technical variation or heterogeneous methylation across 
+rDNA repeats.
+
+Quasi-binomial logistic regression accommodates this additional variation by 
+introducing a dispersion parameter, $\phi$.
+
+The expected number of methylated reads remains
+
+$$
+\operatorname{E}(Y_i)=n_i p_i,
+$$
+
+but the variance becomes
+
+$$
+\boxed{
+\operatorname{Var}(Y_i)
+=
+\phi n_i p_i(1-p_i)
+}
+$$
+where $\phi$ is the dispersion parameter.
+
+The interpretation of $\phi$ is as follows:
+
+- $\phi=1$: The variance is consistent with the
+  conventional binomial model.
+- $\phi>1$: The observations exhibit overdispersion.
+- $\phi<1$: The observations exhibit underdispersion.
+
+The dispersion parameter can be estimated using the Pearson's chi-squared
+statistic:
+
+$$
+\widehat{\phi}
+=
+\frac{\chi^{2}}{n-p}
+$$
+The estimated dispersion parameter is used to adjust the variance-covariance 
+matrix of the regression coefficients. For overdispersed data, this generally
+increases the standard errors and reduces the apparent statistical significance 
+of treatment effects.
+
+In `myoRDNA`, this model is implemented using the `quasibinomial()` family 
+within R's `glm()` function.
+
+**Important:** Reliable dispersion estimation requires sufficient residual 
+degrees of freedom. Sites observed in very few samples, particularly those 
+with missing coverage, may not contain enough information to estimate the 
+dispersion parameter reliably. This problem is more obvious in the beta-binomial
+logistic covered in the next section. Currently, in `myoRDNA` when using the 
+`quasi-binomial` method there is no means of detecting how successful the 
+estimation for $\hat{\phi}$ is. 
+
+### Beta-binomial logistic regression
+
+Beta-binomial regression provides an alternative method for modelling 
+overdispersed methylation data.
+
+Rather than assuming that each sample has a fixed underlying methylation 
+probability, the beta-binomial model allows this probability to vary according 
+to a beta distribution.
+
+For sample $i$, let the underlying methylation probability be $\theta_i$, such 
+that
+
+$$
+\theta_i
+\sim
+\operatorname{Beta}(\alpha_i,\gamma_i).
+$$
+
+Conditional on this probability, the number of methylated reads follows a 
+binomial distribution:
+
+$$
+Y_i
+\sim
+\operatorname{BetaBinomial}
+(n_i,\alpha_i,\beta_i).
+$$
+The expected number of methylated reads is
+
+$$
+\operatorname{E}(Y_i)=n_i p_i,
+$$
+In `myoRDNA`, the beta-binomial model is fitted using the 
+`betabinomial(link = "logit")` family provided by `glmmTMB`.
+
+Unlike quasi-binomial regression, beta-binomial regression specifies a complete 
+likelihood, allowing maximum-likelihood estimation and likelihood-based 
+statistical comparisons.
+
+However, estimating both treatment effects and dispersion can be difficult when 
+the number of biological replicates is small or methylation proportions exhibit 
+little variation.
+
+## Step 1: Site-level differential methylation
+
+Site-level differential methylation identifies individual CpG positions that 
+exhibit differences in methylation between experimental conditions.
+
+For each genomic position, `myoRDNA` fits a separate regression model using the 
+methylated and unmethylated read counts across samples.
+
+Here, we analyse the 18S region of the previously prepared mouse WGBS dataset.
+
+```{r differential-methylation-sites}
+site_results <- diff_meth(
+  meth_data = meth_rDNA_shifted,
+  samples = samples,
+  species = "mm39",
+  num_samples = num_samples,
+  min_cov = 10,
+  region = "18S",
+  model_type = "binomial",
+  p_adjust_method = "BH",
+  site = TRUE
+)
+```
+
+Setting `site = TRUE` performs the differential methylation analysis 
+independently at each retained CpG position.
+
+The `min_cov = 10` argument excludes measurements with fewer than ten 
+sequencing reads.
+
+To use either of the alternative regression models, change the `model_type` 
+argument: `binomial`, `quasi-binomial`, and `beta-binomial`.
+
+Beta-binomial regression can be computationally more demanding, particularly 
+when thousands of CpG positions are analysed independently. As a result of the 
+algorithm requiring the use of optimisation to estimate parameters in the 
+model.
+
+## Step 2: Region-level differential methylation
+
+Region-level differential methylation investigates differences across an entire 
+annotated rDNA region, rather than fitting independent models at each CpG 
+position.
+
+For a selected region, the methylated and unmethylated read counts can be 
+aggregated within each sample:
+
+$$
+M_{i,R}
+=
+\sum_{j \in R} N_{C,ij},
+$$
+
+$$
+U_{i,R}
+=
+\sum_{j \in R} N_{T,ij},
+$$
+
+where $R$ denotes the selected region. The aggregated counts are then used to
+estimate the association between methylation probability and experimental 
+condition.
+
+The following example performs region-level differential methylation for 18S.
+
+```{r differential-methylation-region}
+region_results <- diff_meth(
+  meth_data = meth_rDNA_shifted,
+  samples = samples,
+  species = "mm39",
+  num_samples = num_samples,
+  min_cov = 10,
+  region = "18S",
+  model_type = "binomial",
+  p_adjust_method = "BH",
+  site = FALSE
+)
+```
+
+Setting `site = FALSE` performs the analysis at the regional level. As with 
+site-level analysis, the regression method can be changed using `model_type`.
+
+Region-level aggregation provides a summary of methylation differences across 
+the selected region. However, this approach can obscure opposing methylation 
+changes at individual CpG positions and should therefore be considered 
+complementary to site-level analysis.
+
+## Step 3: Interpreting differential methylation
+
+For the binary treatment coding between CONTROL and CONDITION 1 used in this 
+example, the estimated methylation probabilities are
+
+$$
+\widehat{p}_{\mathrm{CONTROL}}
+=
+\frac{1}{1+\exp(-\widehat{\beta}_0)}
+$$
+and
+
+$$
+\widehat{p}_{\mathrm{CONDITION \ 1}}
+=
+\frac{1}{
+1+\exp[-(\widehat{\beta}_0+\widehat{\beta}_1)]
+}.
+$$
+An odds ratio greater than one indicates higher fitted methylation odds in 
+CONDITION 1 samples, whereas an odds ratio below one indicates lower fitted 
+methylation odds.
+
+The estimated methylation difference, expressed in percentage points, is
+
+$$
+\boxed{
+\Delta_{\mathrm{meth}}
+=
+100
+\left(
+\widehat{p}_{\mathrm{CONDITION \ 1}}
+-
+\widehat{p}_{\mathrm{CONTROL}}
+\right)
+}
+$$
+A positive value therefore indicates higher estimated methylation in CONDITION 1
+samples relative to OLD samples. Statistical evidence for a treatment effect is 
+assessed through the corresponding regression coefficient and its associated 
+hypothesis test.
+
+## Step 4: Multiple-testing correction
+
+Site-level differential methylation involves testing multiple CpG positions, 
+increasing the probability of obtaining false-positive results.
+
+To account for multiple comparisons, `myoRDNA` supports p-value adjustment using
+the Benjamini–Hochberg (BH) as a default procedure. However, if the user wishes 
+to use a less or more conservative method this can be adjusted through the 
+`p_adjust_method` to `none` for no adjustment or `bonferroni` or `holm` to name
+a few. 
+
+The BH method controls the false discovery rate (FDR), defined as the expected 
+proportion of false discoveries among rejected hypotheses, under its applicable 
+dependence assumptions.
+
+The adjusted p-values are then returned to their original genomic positions.
+
+For example, an FDR threshold of 0.05 can be used to identify CpG positions with
+BH-adjusted p-values below 0.05.
+
+The scope of the correction depends on the set of tests included. When different
+rDNA regions are analysed separately, region-specific adjustments do not 
+automatically control the FDR across all regions.
+
+## Beta-binomial optimisation and model diagnostics
+
+Beta-binomial regression estimates the regression coefficients and dispersion 
+parameter by maximising the likelihood of the observed methylation counts.
+
+Because the beta-binomial likelihood can be difficult to optimise, particularly 
+with limited biological replication or extreme methylation proportions, 
+numerical convergence should be assessed before interpreting the fitted 
+coefficients and p-values.
+
+### Available optimisation algorithms
+
+The `glmmTMB` package uses the `nlminb` optimiser by default.
+
+Alternative optimisation strategies include:
+
+- **nlminb:** A nonlinear optimisation algorithm
+  supporting gradient-based optimisation and
+  parameter bounds. Its iteration and function
+  evaluation limits can be increased when
+  additional optimisation steps are required.
+
+- **BFGS:** A quasi-Newton method available
+  through R's `optim()` function. It approximates
+  the inverse Hessian and can provide an
+  alternative when the default optimiser
+  encounters convergence difficulties.
+
+- **Nelder–Mead:** A derivative-free simplex
+  method available through `optim()`.
+  It can be considered when gradient-based
+  optimisation is problematic, although it
+  may be slower or less reliable for some
+  beta-binomial models.
+
+These algorithms are alternatives for fitting the same statistical model; 
+changing the optimiser does not change the model's underlying probability 
+distribution.
+
+### Assessing model convergence
+
+Users should inspect convergence diagnostics before interpreting results from 
+beta-binomial regression.
+
+Potential problems include failure to reach convergence, a non-positive-definite
+Hessian matrix, unusually large regression coefficients and poorly identified 
+dispersion parameters.
+
+These problems may arise when there is insufficient information to estimate the 
+model parameters or when methylation measurements exhibit complete or 
+near-complete separation.
+
+For a fitted `glmmTMB` object,
+the following diagnostics are available:
+
+```{r beta-binomial-diagnostics, eval=FALSE}
+# Inspect fitted model
+summary(fit)
+
+# Check convergence code
+fit$fit$convergence
+
+# Check whether the Hessian is positive definite
+fit$sdr$pdHess
+
+# Run additional diagnostics
+glmmTMB::diagnose(fit)
+```
+
+If convergence problems arise, alternative optimisation settings may be 
+considered. However, changing the optimiser or increasing iteration limits does 
+not necessarily resolve parameter identifiability problems.
+
+Results from models with unresolved convergence problems should not be 
+interpreted as reliable evidence of differential methylation.
+
+## Session information
+
+```{r session-info}
+sessionInfo()
+```
+
+
+
+
+
+
+
+
+
+
+
+
