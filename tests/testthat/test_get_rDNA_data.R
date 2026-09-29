@@ -1,6 +1,6 @@
 file_path <- system.file(
   "extdata",
-  "filtered_meth_raw_chr1_chrRDNAm_xz.rds",
+  "filtered_meth_raw_chr1_chrRDNAm_small.rds",
   package = "myoRDNA"
 )
 
@@ -35,6 +35,10 @@ test_that("test get rDNA data", {
     loaded_data,
     num_samples,
     rDNA_chr_name = "chrRDNAm")
+  
+  #print(actual_output)
+  
+  #saveRDS(actual_output, "inst/extdata/meth_rDNA.rds")
   
   # Compare results
   expect_equal(actual_output, expected_output)

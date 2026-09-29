@@ -1,6 +1,6 @@
 file_path <- system.file(
   "extdata",
-  "filtered_meth_raw_chr1_chrRDNAm_xz.rds",
+  "filtered_meth_raw_chr1_chrRDNAm_small.rds",
   package = "myoRDNA"
 )
 
@@ -30,6 +30,10 @@ test_that("test get unique chromosome names", {
   actual_output <- get_unique_chr_names(
     loaded_data,
     num_samples)
+  
+  #print(actual_output)
+  
+  #saveRDS(actual_output, "inst/extdata/unique_names.rds")
   
   # Compare results
   expect_equal(actual_output, expected_output)

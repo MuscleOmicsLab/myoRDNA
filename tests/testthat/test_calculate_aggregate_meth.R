@@ -1,6 +1,6 @@
 file_path <- system.file(
   "extdata",
-  "example_methylation_small.rds",
+  "filtered_meth_raw_chr1_chrRDNAm_small.rds",
   package = "myoRDNA"
 )
 
@@ -71,6 +71,10 @@ test_that("calculate_aggregate_meth correctly calculates mean methylation", {
     med = FALSE
   )
   
+  #print(actual_output)
+  
+  #saveRDS(actual_output, "inst/extdata/aggregate_meth_avg.rds")
+  
   # Compare results
   expect_equal(actual_output, expected_output)
 })
@@ -99,6 +103,10 @@ test_that("calculate_aggregate_meth correctly calculates median
     conditions = samples,
     med = TRUE
   )
+  
+  #print(actual_output)
+  
+  #saveRDS(actual_output, "inst/extdata/aggregate_meth_med.rds")
   
   # Compare results
   expect_equal(actual_output, expected_output)

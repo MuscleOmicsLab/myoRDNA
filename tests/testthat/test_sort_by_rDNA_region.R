@@ -1,3 +1,12 @@
+file_path <- system.file(
+  "extdata",
+  "filtered_meth_raw_chr1_chrRDNAm_small.rds",
+  package = "myoRDNA"
+)
+
+loaded_data <- readRDS(file_path)
+
+
 # Samples
 samples <- list(
   'OLD' = c(
@@ -8,14 +17,6 @@ samples <- list(
     "SRR28431748", "SRR28431749", "SRR28431750", "SRR28431751"
   )
 )
-
-file_path <- system.file(
-    "extdata",
-    "filtered_meth_raw_chr1_chrRDNAm_xz.rds",
-    package = "myoRDNA"
-  )
-
-loaded_data <- readRDS(file_path)
 
 treatment = c(0,0,0,0,0,0,
               1,1,1,1)
@@ -55,6 +56,10 @@ test_that("test calculate regions", {
     species = "mm39",
     min_cov = 10
   )
+  
+  #print(actual_output)
+  
+  #saveRDS(actual_output, "inst/extdata/region_res.rds")
   
   # Compare results
   expect_equal(actual_output, expected_output)

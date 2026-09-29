@@ -1,6 +1,6 @@
 file_path <- system.file(
   "extdata",
-  "example_methylation_small.rds",
+  "filtered_meth_raw_chr1_chrRDNAm_small.rds",
   package = "myoRDNA"
 )
 
@@ -34,6 +34,10 @@ test_that("test absolute rDNA copy number", {
     rDNA_chr = "chrRDNAm",
     diploid = TRUE
   )
+  
+  #print(actual_output)
+  
+  #saveRDS(actual_output, "inst/extdata/abs_out.rds")
   
   # Compare results
   expect_equal(actual_output, expected_output)

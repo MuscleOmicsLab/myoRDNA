@@ -1,6 +1,6 @@
 file_path <- system.file(
   "extdata",
-  "filtered_meth_raw_chr1_chrRDNAm_xz.rds",
+  "filtered_meth_raw_chr1_chrRDNAm_small.rds",
   package = "myoRDNA"
 )
 
@@ -41,7 +41,9 @@ test_that("test log odds for numCs and numTs", {
     treatment, 
     chromo="chrRDNAm")
   
+  #print(actual_output)
   
+  #saveRDS(actual_output, "inst/extdata/log_odds.rds")
   
   # Compare results
   expect_equal(actual_output, expected_output)

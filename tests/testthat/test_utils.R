@@ -1,6 +1,6 @@
 file_path <- system.file(
   "extdata",
-  "filtered_meth_raw_chr1_chrRDNAm_xz.rds",
+  "filtered_meth_raw_chr1_chrRDNAm_small.rds",
   package = "myoRDNA"
 )
 
@@ -62,6 +62,10 @@ test_that("test calculate correlation coefficient", {
     condition_name = "Condition",
     cor_columns = c("Absolute_rDNA_CN", "Relative_rDNA_CN")
   )
+  
+  #print(actual_output)
+  
+  #saveRDS(actual_output, "inst/extdata/merged_df.rds")
   
   # Compare results
   expect_equal(actual_output, expected_output)
