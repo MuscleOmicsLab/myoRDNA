@@ -1,6 +1,6 @@
 file_path <- system.file(
   "extdata",
-  "filtered_meth_raw_chr1_chrRDNAm.rds",
+  "filtered_meth_raw_chr1_chrRDNAm_xz.rds",
   package = "myoRDNA"
 )
 
