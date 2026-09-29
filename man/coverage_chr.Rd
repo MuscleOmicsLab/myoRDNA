@@ -31,7 +31,7 @@ plots it as a bar chart.
 # Load the example methylation dataset
 file_path <- system.file(
   "extdata",
-  "example_methylation_small.rds",
+  "filtered_meth_raw_chr1_chrRDNAm_small.rds",
   package = "myoRDNA",
   mustWork = TRUE
 )
