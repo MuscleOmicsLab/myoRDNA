@@ -1,8 +1,10 @@
 ### myoRDNA
-A toolkit for analysing rDNA methylation data from muscle and used in unison with methylKit.
+A toolkit for analysing rDNA methylation data from muscle and used in unison 
+with methylKit.
 
 ## Installation
-Given that this package is currently under development installation must performed using devtools.
+Given that this package is currently under development installation must 
+performed using devtools.
 Please implement the following commands in the R terminal:
 ```
 install.packages("devtools")
@@ -19,30 +21,35 @@ install_github("MuscleOmicsLab/myoRDNA", branch = "main")
 library(myoRDNA)
 ```
 
-## Functionality
-```
-absolute_rDNA_CN <- function(
-    Meth_object,
-    num_samples,
-    autosomes = TRUE,
-    rDNA_chr,
-    diploid = TRUE)
-```
- This function calculates the **absolute rDNA copy number** for each sample in a `Meth_object` (e.g., a list of methylation data or coverage data).
+## Link to Useful Resources
 
- ```
- relative_rDNA_CN <- function(
-    Meth_object,
-    num_samples,
-    autosomes = TRUE,
-    rDNA_chr,
-    diploid = TRUE)
- ```
- This function calculates the **relative rDNA copy number** for each sample in a `Meth_object` (e.g., a list of methylation data or coverage data).
+# Manuscript highlighting examples of myoRDNA
+```
+Vaughan, D., Wood, N. and Seaborne, R.A., 2026. The ribosomal DNA landscape of 
+mammalian muscle during acute and chronic physiological stress. bioRxiv, 
+pp.2026-08.
 
- ```
- get_unique_chr_names <- function(
-    Meth_object,
-    num_samples)
- ```
- This function extracts the unique chromosome names from the first sample in a `Meth_object` (e.g., a list of methylation data) and checks if all samples have the same chromosomes.
+Bibtex for latex users:
+
+@article{vaughan2026ribosomal,
+  title={The ribosomal DNA landscape of mammalian muscle during acute and 
+  chronic physiological stress},
+  author={Vaughan, Daniel and Wood, Nathanael and Seaborne, Robert AE},
+  journal={bioRxiv},
+  pages={2026--08},
+  year={2026},
+  publisher={Cold Spring Harbor Laboratory}
+}
+```
+
+# Data used in the user guide and vignette:
+```
+Oyabu M, Ohira Y, Fujita M, Yoshioka K et al. Dnmt3a overexpression disrupts 
+skeletal muscle homeostasis, promotes an aging-like phenotype, and reduces 
+metabolic elasticity. iScience 2025 Apr 18;28(4):112144. 
+```
+[GEO](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE262342)
+
+## Contributing
+We welcome contributions in any form: suggestions, issues, bugfixes. 
+Pull requests should be made to the development branch.
