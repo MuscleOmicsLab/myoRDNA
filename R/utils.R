@@ -9,7 +9,8 @@ attach_by_id <- function(
   # Create a named vector to map ID values to their condition
   id_conditions <- unlist(
     lapply(names(samples), function(condition) {
-      setNames(rep(condition, length(samples[[condition]])), samples[[condition]])
+      stats::setNames(rep(condition, length(samples[[condition]])), 
+                      samples[[condition]])
     })
   )
   
@@ -32,16 +33,17 @@ attach_by_id <- function(
     
     # Check if the specified columns exist in the merged dataframe
     if (!all(cor_columns %in% names(merged_df))) {
-      stop("One or both specified columns for correlation do not exist in the merged dataframe.")
+      stop("One or both specified columns for correlation do not 
+           exist in the merged dataframe.")
     }
     
     # Pearson correlation for all samples
-    cor_test_all <- cor.test(
+    cor_test_all <- stats::cor.test(
       merged_df[[cor_columns[1]]],
       merged_df[[cor_columns[2]]],
       method = "pearson"
     )
-    print(cor_test_all)
+    message(cor_test_all)
   }
   
   # Return the merged dataframe with conditions
