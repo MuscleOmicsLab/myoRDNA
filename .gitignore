@@ -49,8 +49,7 @@ po/*~
 rsconnect/
 *.json
 *.env
-/inst
-/inst/*
+
 *.pem 
 *.key
 *.log
@@ -62,3 +61,5 @@ rsconnect/
 *.bed
 *.vcf
 inst/doc
+
+security_test.R
