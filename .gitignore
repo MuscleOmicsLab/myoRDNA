@@ -66,3 +66,4 @@ testing.R
 *.fastq.gz
 *.bed
 *.vcf
+inst/doc
